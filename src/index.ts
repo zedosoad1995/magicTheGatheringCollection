@@ -32,17 +32,6 @@ function getSets(){
     });
 }
 
-const specialCodes: Record<string, string[]> = {
-    plg21: ['J1', 'J2', 'J3'],
-    pjjt: ['1N03', '1N04', '2N04', '1N05', '2N05', '1N06', '2N06', '1N07', '2N07', '1N08', '2N08', '3N08'],
-    hho: ['7†', '13†'],
-}
-
-/*
-pxln: ['END with p or s'],
-amh2: ['END with s']
-*/
-
 async function getCards(set: any, cardNum?: number){
     const cardKeys = ['name', 'layout', 'image_uris png:image_uri', 'type_line', 'oracle_text', 'mana_cost', 'power', 'toughness', 'colors', 'color_identity',
                     'reserved', 'foil', 'nonfoil', 'digital', 'rarity', 'border_color', 'full_art', 'edhrec_rank', 'prices'];
@@ -56,7 +45,7 @@ async function getCards(set: any, cardNum?: number){
 
     if(cardNum){
 
-        return await axios.get(`https://api.scryfall.com/cards/${code}/${cardNum}`, {timeout: 300})
+        return await axios.get(`https://api.scryfall.com/cards/${code}/${cardNum}`, {timeout: 1000})
             .then(resp =>  {
                 return selectSpecificKeys(resp['data'], cardKeysMegaLight)
             })
@@ -81,53 +70,30 @@ async function getCards(set: any, cardNum?: number){
     return cards;
 }
 
+function getWeightByYear(year: number){
+    const c = 1.15835;
 
-
-function getProbabilityByYear(year: number){
-    const currYear: number = new Date().getFullYear();
-    const FIRST_YEAR = 1993;
-
-    if(year < FIRST_YEAR || year > currYear) return 0;
-
-    let tempNumerator = 1;
-    let numerator = 0;
-    let c = 1.15835;
-
-    let total = 0;
-    for(let i = FIRST_YEAR; i <= currYear; i++){
-        if(i === year) numerator = tempNumerator;
-
-        total += tempNumerator;
-        tempNumerator *= c;
-    }
-
-    return numerator/total;
+    return c**(year - FIRST_YEAR);
 }
 
-function getCumDistribution(){
-    const FIRST_YEAR = 1993;
+function getYearWeights(){
     const currYear: number = new Date().getFullYear();
+    const FIRST_YEAR = 1993;
 
-    let cumDistAndYear: {prob: number, year: number}[] = [];
-    let sum = 0;
-    for(let y = FIRST_YEAR; y < currYear; y++){
-        sum += getProbabilityByYear(y);
-        cumDistAndYear.push({prob: sum, year: y});
+    let yearsList = [];
+    let weigthsDistribution = [];
+    for (let year = FIRST_YEAR; year <= currYear; year++) {
+        weigthsDistribution.push(getWeightByYear(year));
+        yearsList.push(year);
     }
-    cumDistAndYear.push({prob: 1, year: currYear});
 
-    return cumDistAndYear;
+    return {weigthsDistribution, yearsList}
 }
 
 function getRandomYear(){
-    const rand = Math.random();
-    const cumDistAndYear = getCumDistribution();
+    const {weigthsDistribution, yearsList} = getYearWeights();
 
-    const chosenElement = cumDistAndYear.find((dict: any) => rand < dict['prob']);
-
-    if(chosenElement === undefined) throw new Error(`Cannot retrieve year.`);
-
-    return chosenElement['year'];
+    return selectRandomFromProbDist(yearsList, weigthsDistribution)
 }
 
 function selectRandomFromProbDist(obj: any[], weigths: number[]){
@@ -146,6 +112,7 @@ function selectRandomFromProbDist(obj: any[], weigths: number[]){
 const currYear: number = new Date().getFullYear();
 const FIRST_YEAR = 1993;
 
+/*
 getSets()
 .then(async (sets) => {
     return sets.reduce((obj: any, set: any) => {
@@ -166,14 +133,6 @@ getSets()
     
     //if(year < FIRST_YEAR || year > currYear)
 
-    //sets.
-    /*await sets.forEach(async (set: any, i: number) => {
-        if('parent_set_code' in set) return;
-
-        return await getCardsBySet(set)
-        .then(cards => console.log(set['code'], set['released_at'], cards.length))
-        .catch(() => console.log('Invalid set:', set['code']));
-    });*/
 })
 .then(async (setsByYear) => {
     let setOfMostExpensiveCard: any = {};
@@ -208,3 +167,6 @@ getSets()
     console.log('Most expensive card:', mostExpensiveCard, setOfMostExpensiveCard);
 
 });
+*/
+
+console.log(getRandomYear());
