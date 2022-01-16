@@ -25,7 +25,8 @@ function selectSpecificKeys(obj: any, keys: string[]): {[k: string]: any}{
 export function getSets(){
     return axios.get('https://api.scryfall.com/sets')
     .then(resp => {
-        return resp['data']['data'].map((set: any) => selectSpecificKeys(set, ['code', 'parent_set_code', 'name', 'released_at', 'set_type', 'card_count', 'icon_svg_uri']));
+        const setKeys = ['code', 'parent_set_code', 'name', 'released_at', 'set_type', 'card_count', 'icon_svg_uri', 'scryfall_uri'];
+        return resp['data']['data'].map((set: any) => selectSpecificKeys(set, setKeys));
     })
     .catch((error: any) => {
         //throw(error)
