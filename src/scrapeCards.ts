@@ -3,44 +3,50 @@ import cheerio, { Cheerio } from 'cheerio';
 import {getSets} from './index';
 
 async function scrapeCardIdsFromSet(setUrl: string) {
-    console.log(setUrl);
     return axios.get(setUrl)
     .then(resp => {
+        let cardsObj: {[k: string]: string[]} = {};
+
         const $ = cheerio.load(resp.data);
 
+        // gets categories names in the deck
         let cardsCategories: string[] = [];
         $('.card-grid-header-content').each((_, element) => {
-            const cardsCategory: any = $(element).first().contents().filter(function() {
+            const cardsCategory: string = $(element).first().contents().filter(function() {
                 return this.type === 'text';
             }).text().trim().split('\n')[0].trim();
-            cardsCategories.push(cardsCategory);
+
+            if(cardsCategory) cardsCategories.push(cardsCategory);
         });
 
-        let numberOfCardsPerCategory: number[] = [];
-        $('.card-grid-inner').each((_, element) => {
-            let i = 0;
+        if(cardsCategories.length === 0) cardsCategories.push('None');
+
+        // Gets ids of cards in set, by category
+        $('.card-grid-inner').each((categoryNum, element) => {
+            let cardIds: string[] = [];
+
             $(element).find('> div > a').each((idx, element) => {
-                const src1 = $(element).find('.card-grid-item-card-front > img').attr('src');
-                const src2 = $(element).find('.card-grid-item-card-front > img').attr('data-src');
-                let src = src1;
-                if(!src) src = src2;
+                let src = $(element).find('.card-grid-item-card-front > img').attr('src');
+                if(!src){
+                    src = $(element).find('.card-grid-item-card-front > img').attr('data-src');
+                }
+
                 if(src){
-                    //console.log(src.match(/\/([^\/]*)\.jpg/));
-                    i++;
+                    const srcMatch = src.match(/\/([^\/]*)\.jpg/);
+                    if(srcMatch){
+                        cardIds.push(srcMatch[1]);
+                    }else{
+                        throw new Error(`Image ${src} unable to match '/\/([^\/]*)\.jpg/'`);
+                    }
                 }else{
-                    //console.log(idx, $(element).find('.card-grid-item-card-front > img').toString());
+                    throw new Error(`Unable to find img or src/data-src from scraped element #${idx}`);
                 }
             });
-            console.log(i, $(element).find('> div > a').length, setUrl);
-            if(i !== $(element).find('> div > a').length){
-                console.log('End');
-                process.exit(1);
-            }
+
+            cardsObj[cardsCategories[categoryNum]] = cardIds;
         });
 
-        return {
-            cardsCategories
-        };
+        return cardsObj;
     })
     .catch(function (error) {
         throw error;
@@ -49,17 +55,21 @@ async function scrapeCardIdsFromSet(setUrl: string) {
 
 getSets()
 .then(sets => 
-    sets.reduce((obj: string[], set: any) => {
-        if(set['card_count'] > 0){
-            obj.push(set['scryfall_uri']);
-        }
+    sets.reduce((obj: {scryfall_uri: string, code: string}[], set: any) => {
+        if(set['card_count'] > 0) obj.push({scryfall_uri: set['scryfall_uri'], code: set['code']});
 
         return obj;
     }, [])
 )
-.then(async (setUrls) => {
-    for(let i = 0; i < setUrls.length; i++){
-        console.log(await scrapeCardIdsFromSet(setUrls[i]));
+.then(async (sets) => {
+    // TODO: Use interface, and extend interface of returned obj
+    const setsObj: {[k: string]: {[k: string]: string[]}} = {};
+
+    for(let i = 0; i < sets.length; i++){
+        setsObj[sets[i]['code']] = await scrapeCardIdsFromSet(sets[i]['scryfall_uri']);
+        console.log(setsObj);
     }
+
+    return setsObj;
 })
 .catch(console.log);
