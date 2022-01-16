@@ -22,7 +22,7 @@ function selectSpecificKeys(obj: any, keys: string[]): {[k: string]: any}{
     return result;
 }
 
-function getSets(){
+export function getSets(){
     return axios.get('https://api.scryfall.com/sets')
     .then(resp => {
         return resp['data']['data'].map((set: any) => selectSpecificKeys(set, ['code', 'parent_set_code', 'name', 'released_at', 'set_type', 'card_count', 'icon_svg_uri']));
@@ -169,4 +169,5 @@ getSets()
 });
 */
 
-console.log(getRandomYear());
+//console.log(getRandomYear());
+getSets();
