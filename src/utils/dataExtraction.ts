@@ -2,6 +2,15 @@ import axios from 'axios';
 import cheerio, {CheerioAPI } from 'cheerio';
 import cliProgress from 'cli-progress';
 import {selectSpecificKeys} from './utils';
+import axiosRetry from 'axios-retry';
+
+axiosRetry(axios, {
+    retries: 3,
+    retryDelay: (retryCount) => {
+        return retryCount * 2000;
+    }
+});
+
 
 export function getDecks(){
     return axios.get('https://api.scryfall.com/sets')
@@ -10,31 +19,55 @@ export function getDecks(){
         return resp['data']['data'].map((deck: any) => selectSpecificKeys(deck, deckKeys));
     })
     .catch((error) => {
-        throw(error)
+        throw(error);
     });
 }
 
+let all_keys_face_card = new Set();
+let all_keys_cards = new Set();
+
 // TODO: replace type any
 // TODO: get card by card id
-/*
-export async function getCards(deck: any, cardNum: number){
-    const cardKeys = ['name', 'layout', 'image_uris png:image_uri', 'type_line', 'oracle_text', 'mana_cost', 'power', 'toughness', 'colors', 'color_identity',
+export async function getCard(cardId: string){
+    /*const cardKeys = ['name', 'layout', 'image_uris png:image_uri', 'type_line', 'oracle_text', 'mana_cost', 'power', 'toughness', 'colors', 'color_identity',
                     'reserved', 'foil', 'nonfoil', 'digital', 'rarity', 'border_color', 'full_art', 'edhrec_rank', 'prices'];
     const cardKeysLight = ['name', 'layout', 'type_line', 'mana_cost', 'power', 'toughness', 'colors', 'rarity'];
-    const cardKeysMegaLight = ['name', 'rarity', 'prices'];
+    const cardKeysMegaLight = ['name', 'rarity', 'prices'];*/
 
-    const code: string = deck['code'];
+    const cardKeys = ['id:uniqueScryfallId', 'name', 'released_at', 'scryfall_uri:url', 'layout', 'image_uris png>large>normal>small:imageUrl', 'mana_cost',
+                    'cmc:rawCost', 'type_line:type', 'colors', 'color_identity', 'oracle_text:rulesText', 'artist', 'power', 'toughness', 
+                    'reserved:isReserved', 'foil:hasFoil', 'nonfoil:hasNonFoil', 'oversized:isOversized', 'promo:isPromo', 'reprint:isReprint', 
+                    'variation:isVariation', 'set', 'collector_number', 'digital:isDigital', 'rarity', 'flavor_text:descriptionText', 'border_color', 
+                    'frame', 'security_stamp', 'full_art:isFullArt', 'textless:isTextless','booster:fromBooster', 'story_spotlight:hasStorySpotlight',
+                    'prices', 'edhrec_rank', 'loyalty'];
 
+    const cardFaceKeys = [ 'name', 'mana_cost', 'type_line:type', 'oracle_text:rulesText', 'colors', 'power', 'toughness', 'artist',
+                        'image_uris png>large>normal>small:imageUrl', 'loyalty', 'flavor_text:descriptionText', 'layout', 'cmc:rawCost'];
 
-    return await axios.get(`https://api.scryfall.com/cards/${code}/${cardNum}`, {timeout: 1000})
+    return axios.get(`https://api.scryfall.com/cards/${cardId}`)
         .then(resp =>  {
-            return selectSpecificKeys(resp['data'], cardKeysMegaLight)
+            let cardInfo = selectSpecificKeys(resp['data'], cardKeys, true);
+            let cardsInfo = [cardInfo];
+
+            if('card_faces' in resp['data']){
+                cardsInfo = [];
+
+                resp['data']['card_faces'].forEach((cardFace: any, idx: number) => {
+                    const cardFaceInfo = selectSpecificKeys(cardFace, cardFaceKeys, true);
+
+                    const fullCardFaceInfo = Object.assign(cardInfo, cardFaceInfo);
+                    fullCardFaceInfo['cardPartNumber'] = idx;
+
+                    cardsInfo.push(fullCardFaceInfo);
+                });
+            }
+            return cardsInfo
         })
         .catch((error) => {
-            throw(error);
+            console.log(cardId, error);
+            process.exit(1);
         });
 }
-*/
 
 function getDeckCategories($: CheerioAPI): string[]{
     let deckCategories: string[] = [];
@@ -57,23 +90,14 @@ function getCardIdsObject($: CheerioAPI, deckCategories: string[]): {[k: string]
     $('.card-grid-inner').each((deckCategoryNum, element) => {
         let cardIds: string[] = [];
 
-        $(element).find('> div > a').each((cardNum, element) => {
-            let imgSrc = $(element).find('.card-grid-item-card-front > img').attr('src');
-            if(!imgSrc){
-                imgSrc = $(element).find('.card-grid-item-card-front > img').attr('data-src');
+        $(element).find('> div.card-grid-item').each((cardNum, element) => {
+            const cardId = $(element).attr('data-card-id');
+            if(cardId){
+                cardIds.push(cardId);
+            }else if(!$(element).hasClass('flexbox-spacer')){
+                throw new Error(`Unable to find div.data-card-id from scraped element #${cardNum}`);
             }
-
-            if(imgSrc){
-                const cardIdFromSrc = imgSrc.match(/\/([^\/]*)\.jpg/);
-                if(cardIdFromSrc){
-                    cardIds.push(cardIdFromSrc[1]);
-                }else{
-                    throw new Error(`Image ${imgSrc} unable to match '/\/([^\/]*)\.jpg/'`);
-                }
-            }else{
-                throw new Error(`Unable to find img or src/data-src from scraped element #${cardNum}`);
-            }
-        });
+        })
 
         cardIdsObj[deckCategories[deckCategoryNum]] = cardIds;
     });
@@ -92,7 +116,8 @@ async function scrapeCardIdsFromDeck(deckUrl: string) {
         // Gets ids of cards in deck, by category
         return getCardIdsObject($, deckCategories);
     })
-    .catch(function (error) {
+    .catch(error => {
+        //process.exit(1);
         throw error;
     });
 }
@@ -121,7 +146,63 @@ export async function scrapeAllCardIds(){
 
         return decksObj;
     })
-    .catch((error) => {
+    .catch(error => {
         throw(error);
     });
 }
+
+export async function scrapeAllCards(){
+    return getDecks()
+    .then(decks => 
+        decks.reduce((obj: {scryfall_uri: string, code: string}[], deck: any) => {
+            if(deck['card_count'] > 0) obj.push({scryfall_uri: deck['scryfall_uri'], code: deck['code']});
+
+            return obj;
+        }, [])
+    )
+    .then(async (decks) => {
+        // TODO: Use interface, and extend interface of returned obj
+        const decksObj: {[k: string]: {[k: string]: string[]}} = {};
+
+        const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+        progressBar.start(decks.length, 1);
+
+        let cards: any[] = [];
+
+        for(let i = 0; i < decks.length; i++){
+            progressBar.update(i);
+            const cardIdsObj = await scrapeCardIdsFromDeck(decks[i]['scryfall_uri']);
+
+            let cardsIdsArray: string[] = [];
+            cardsIdsArray = cardsIdsArray.concat(...Object.values(cardIdsObj));
+
+            await cardsIdsArray.forEach(async (id) => {
+                const returnedCard = await getCard(id);
+                cards = cards.concat(...returnedCard);
+            });
+
+            console.log('# of cards', cards.length);
+        }
+        progressBar.stop();
+
+        console.log(all_keys_face_card);
+        console.log(all_keys_cards);
+        console.log(all_keys_face_card);
+        console.log(all_keys_face_card);
+        console.log(all_keys_face_card);
+        console.log(all_keys_face_card);
+
+        return decksObj;
+    })
+    .catch((error) => {
+        //console.log(error);
+        //process.exit();
+        throw(error);
+    });
+}
+
+scrapeAllCards()
+.catch((error) => {
+    console.log(error);
+    process.exit();
+})

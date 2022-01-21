@@ -1,4 +1,4 @@
-require('dotenv').config()
+import 'dotenv/config'
 import {createConnection} from 'typeorm'
 import express from 'express'
 import bodyParser from 'body-parser'

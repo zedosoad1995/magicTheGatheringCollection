@@ -59,6 +59,9 @@ export class Cards extends BaseEntity {
     toughness: number;
 
     @Column()
+    kaywords: string[];
+
+    @Column()
     isReserved: boolean;
 
     @Column()
@@ -101,6 +104,12 @@ export class Cards extends BaseEntity {
     frameEffects: string;
 
     @Column()
+    securityStamp: string;
+
+    @Column()
+    loyalty: string;
+
+    @Column()
     isFullArt: boolean;
 
     @Column()
@@ -115,6 +124,12 @@ export class Cards extends BaseEntity {
     @Column()
     edhrecRank: number;
 
+    @Column()
+    uniqueScryfallId: string;
+
+    @Column()
+    cardPartNumber: number;
+
     @OneToOne(() => Prices)
     @JoinColumn()
     prices: Prices;
@@ -124,12 +139,6 @@ export class Cards extends BaseEntity {
         deck => deck.cards
     )
     deck: Decks;
-
-    @Column()
-    uniqueScryfallId: string;
-
-    @Column()
-    cardPartNumber: number;
 
 	@CreateDateColumn()
 	created_at: Date;

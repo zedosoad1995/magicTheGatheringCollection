@@ -1,9 +1,10 @@
-const FIRST_YEAR = 1993;
+import 'dotenv/config'
+
+const FIRST_YEAR = Number(process.env.FIRST_YEAR);
+const YEAR_WEIGHT_CONST = Number(process.env.YEAR_WEIGHT_CONST);
 
 function getWeightByYear(year: number){
-    const c = 1.15835;
-
-    return c**(year - FIRST_YEAR);
+    return YEAR_WEIGHT_CONST**(year - FIRST_YEAR);
 }
 
 function getWeightsAndYears(){
