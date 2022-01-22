@@ -15,25 +15,18 @@ axiosRetry(axios, {
 export function getDecks(){
     return axios.get('https://api.scryfall.com/sets')
     .then(resp => {
-        const deckKeys = ['code', 'parent_deck_code', 'name', 'released_at', 'deck_type', 'card_count', 'icon_svg_uri', 'scryfall_uri'];
-        return resp['data']['data'].map((deck: any) => selectSpecificKeys(deck, deckKeys));
+        const deckKeys = ['code', 'name', 'released_at', 'deck_type:type', 'card_count', 'icon_svg_uri:iconUrl', 
+                        'scryfall_uri:url', 'set_type:type', 'digital:isDigital'];
+        return resp['data']['data'].map((deck: any) => selectSpecificKeys(deck, deckKeys, true));
     })
     .catch((error) => {
+        console.error(error);
         throw(error);
     });
 }
 
-let all_keys_face_card = new Set();
-let all_keys_cards = new Set();
-
 // TODO: replace type any
-// TODO: get card by card id
-export async function getCard(cardId: string){
-    /*const cardKeys = ['name', 'layout', 'image_uris png:image_uri', 'type_line', 'oracle_text', 'mana_cost', 'power', 'toughness', 'colors', 'color_identity',
-                    'reserved', 'foil', 'nonfoil', 'digital', 'rarity', 'border_color', 'full_art', 'edhrec_rank', 'prices'];
-    const cardKeysLight = ['name', 'layout', 'type_line', 'mana_cost', 'power', 'toughness', 'colors', 'rarity'];
-    const cardKeysMegaLight = ['name', 'rarity', 'prices'];*/
-
+async function getCard(cardId: string){
     const cardKeys = ['id:uniqueScryfallId', 'name', 'released_at', 'scryfall_uri:url', 'layout', 'image_uris png>large>normal>small:imageUrl', 'mana_cost',
                     'cmc:rawCost', 'type_line:type', 'colors', 'color_identity', 'oracle_text:rulesText', 'artist', 'power', 'toughness', 
                     'reserved:isReserved', 'foil:hasFoil', 'nonfoil:hasNonFoil', 'oversized:isOversized', 'promo:isPromo', 'reprint:isReprint', 
@@ -61,6 +54,7 @@ export async function getCard(cardId: string){
                     cardsInfo.push(fullCardFaceInfo);
                 });
             }
+
             return cardsInfo
         })
         .catch((error) => {
@@ -165,7 +159,7 @@ export async function scrapeAllCards(){
         const decksObj: {[k: string]: {[k: string]: string[]}} = {};
 
         const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-        progressBar.start(decks.length, 1);
+        progressBar.start(decks.length, 0);
 
         let cards: any[] = [];
 
@@ -180,17 +174,8 @@ export async function scrapeAllCards(){
                 const returnedCard = await getCard(id);
                 cards = cards.concat(...returnedCard);
             });
-
-            console.log('# of cards', cards.length);
         }
         progressBar.stop();
-
-        console.log(all_keys_face_card);
-        console.log(all_keys_cards);
-        console.log(all_keys_face_card);
-        console.log(all_keys_face_card);
-        console.log(all_keys_face_card);
-        console.log(all_keys_face_card);
 
         return decksObj;
     })
@@ -201,8 +186,11 @@ export async function scrapeAllCards(){
     });
 }
 
-scrapeAllCards()
+/*scrapeAllCards()
 .catch((error) => {
     console.log(error);
     process.exit();
-})
+});*/
+
+getDecks()
+.then(console.log);

@@ -2,6 +2,10 @@ import 'dotenv/config'
 import {createConnection} from 'typeorm'
 import express from 'express'
 import bodyParser from 'body-parser'
+import { Price } from './entities/Price';
+import { Deck } from './entities/Deck';
+import { Card } from './entities/Card';
+import { insertAllDecksInTable } from './tasks/fillDecksTable';
 
 const app = express();
 
@@ -20,9 +24,12 @@ async function main(){
             username: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_DATABASE,
+            entities: [Deck, Card, Price],
             synchronize: true
         });
         console.log('Successfully connected to DB.')
+
+        insertAllDecksInTable();
     }catch(error){
         console.log(error);
     }

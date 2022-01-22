@@ -7,27 +7,27 @@ import {
 	UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('prices')
-export class Prices extends BaseEntity {
+@Entity('price')
+export class Price extends BaseEntity {
     @PrimaryGeneratedColumn()
 	id: number;
 
-    @Column()
+    @Column({nullable: true})
     usd: number;
 
-    @Column()
+    @Column({nullable: true})
     usdFoil: number;
 
-    @Column()
+    @Column({nullable: true})
     usdEtched: number;
 
-    @Column()
+    @Column({nullable: true})
     eur: number;
 
-    @Column()
-    eurFol: number;
+    @Column({nullable: true})
+    eurFoil: number;
 
-    @Column()
+    @Column({nullable: true})
     tix: number;
 
 	@CreateDateColumn()

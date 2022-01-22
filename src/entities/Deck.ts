@@ -1,20 +1,18 @@
 import {
 	Entity,
 	Column,
-    PrimaryGeneratedColumn,
     BaseEntity,
 	CreateDateColumn,
 	UpdateDateColumn,
     OneToMany,
+    PrimaryColumn,
+    Unique,
 } from 'typeorm';
-import { Cards } from './Cards';
+import { Card } from './Card';
 
-@Entity('prices')
-export class Decks extends BaseEntity {
-    @PrimaryGeneratedColumn()
-	id: number;
-
-    @Column()
+@Entity('deck')
+export class Deck extends BaseEntity {
+    @PrimaryColumn()
     code: string;
 
     @Column()
@@ -26,17 +24,23 @@ export class Decks extends BaseEntity {
     @Column()
     cardCount: number;
 
-    @Column()
+    @Column({nullable: true})
     isDigital: boolean;
 
     @Column()
+    url: string;
+    
+    @Column()
     iconUrl: string;
 
+    @Column({nullable: true})
+    type: string;
+
     @OneToMany(
-		() => Cards,
+		() => Card,
 		(cards) => cards.deck
 	)
-	cards: Cards[];
+	cards: Card[];
 
 	@CreateDateColumn()
 	created_at: Date;

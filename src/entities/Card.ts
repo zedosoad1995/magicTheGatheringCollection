@@ -9,12 +9,12 @@ import {
     JoinColumn,
     ManyToOne,
 } from 'typeorm';
-import { Prices } from './Prices';
-import { Decks } from './Decks';
+import { Price } from './Price';
+import { Deck } from './Deck';
 
 // TODO: inserir nullable e default value
-@Entity('cards')
-export class Cards extends BaseEntity {
+@Entity('card')
+export class Card extends BaseEntity {
     @PrimaryGeneratedColumn()
 	id: number;
 
@@ -33,14 +33,14 @@ export class Cards extends BaseEntity {
     @Column()
     type: string;
 
-    @Column()
+    @Column("text", { array: true })
     colors: string[];
 
     // TODO: save the real image?
-    @Column()
+    @Column({nullable: true})
     imageUrl: string;
 
-    @Column()
+    @Column({nullable: true})
     manaCost: string;
 
     @Column()
@@ -49,17 +49,17 @@ export class Cards extends BaseEntity {
     @Column({nullable: true})
     rulesText: string;
 
-    @Column()
+    @Column({nullable: true})
     descriptionText: string;
 
-    @Column()
+    @Column({nullable: true})
     power: number;
 
-    @Column()
+    @Column({nullable: true})
     toughness: number;
 
-    @Column()
-    kaywords: string[];
+    @Column("text", { array: true })
+    keywords: string[];
 
     @Column()
     isReserved: boolean;
@@ -91,7 +91,7 @@ export class Cards extends BaseEntity {
     @Column()
     rarity: string;
 
-    @Column()
+    @Column({nullable: true})
     artist: string;
 
     @Column()
@@ -100,13 +100,13 @@ export class Cards extends BaseEntity {
     @Column()
     frame: string;
 
-    @Column()
+    @Column({nullable: true})
     frameEffects: string;
 
-    @Column()
+    @Column({nullable: true})
     securityStamp: string;
 
-    @Column()
+    @Column({nullable: true})
     loyalty: string;
 
     @Column()
@@ -118,27 +118,27 @@ export class Cards extends BaseEntity {
     @Column()
     fromBooster: boolean;
 
-    @Column()
+    @Column({nullable: true})
     hasStorySpotlight: boolean;
 
-    @Column()
+    @Column({nullable: true})
     edhrecRank: number;
 
-    @Column()
+    @Column('uuid')
     uniqueScryfallId: string;
 
-    @Column()
+    @Column({nullable: true})
     cardPartNumber: number;
 
-    @OneToOne(() => Prices)
+    @OneToOne(() => Price, {nullable: true})
     @JoinColumn()
-    prices: Prices;
+    price: Price;
     
     @ManyToOne(
-        () => Decks, 
+        () => Deck, 
         deck => deck.cards
     )
-    deck: Decks;
+    deck: Deck;
 
 	@CreateDateColumn()
 	created_at: Date;
