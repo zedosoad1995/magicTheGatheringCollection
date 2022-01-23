@@ -5,7 +5,9 @@ import bodyParser from 'body-parser'
 import { Price } from './entities/Price';
 import { Deck } from './entities/Deck';
 import { Card } from './entities/Card';
-import { insertAllDecksInTable } from './tasks/fillDecksTable';
+import { insertAllDecksInTable } from './tasks/fillDeckTable';
+import { scrapeAllCards } from './utils/dataExtraction';
+import { insertCardsInTable } from './tasks/fillCardTable';
 
 const app = express();
 
@@ -29,7 +31,9 @@ async function main(){
         });
         console.log('Successfully connected to DB.')
 
-        insertAllDecksInTable();
+        //insertAllDecksInTable();
+        
+        scrapeAllCards(insertCardsInTable);
     }catch(error){
         console.log(error);
     }

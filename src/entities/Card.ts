@@ -8,6 +8,7 @@ import {
     OneToOne,
     JoinColumn,
     ManyToOne,
+    Unique,
 } from 'typeorm';
 import { Price } from './Price';
 import { Deck } from './Deck';
@@ -53,12 +54,12 @@ export class Card extends BaseEntity {
     descriptionText: string;
 
     @Column({nullable: true})
-    power: number;
+    power: string;
 
     @Column({nullable: true})
-    toughness: number;
+    toughness: string;
 
-    @Column("text", { array: true })
+    @Column("text", { array: true, nullable: true })
     keywords: string[];
 
     @Column()
@@ -82,11 +83,11 @@ export class Card extends BaseEntity {
     @Column()
     isVariation: boolean;
 
-    @Column()
-    collectorNumber: number;
+    @Column({nullable: true})
+    collectorNumber: string;
 
     @Column()
-    isDigital: number;
+    isDigital: boolean;
 
     @Column()
     rarity: string;
@@ -130,7 +131,7 @@ export class Card extends BaseEntity {
     @Column({nullable: true})
     cardPartNumber: number;
 
-    @OneToOne(() => Price, {nullable: true})
+    @OneToOne(() => Price, {nullable: true, cascade: true, eager: true})
     @JoinColumn()
     price: Price;
     

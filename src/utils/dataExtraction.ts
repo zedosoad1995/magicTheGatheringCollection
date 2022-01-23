@@ -3,6 +3,7 @@ import cheerio, {CheerioAPI } from 'cheerio';
 import cliProgress from 'cli-progress';
 import {selectSpecificKeys} from './utils';
 import axiosRetry from 'axios-retry';
+import { insertCardsInTable } from '../tasks/fillCardTable';
 
 axiosRetry(axios, {
     retries: 3,
@@ -16,7 +17,7 @@ export function getDecks(){
     return axios.get('https://api.scryfall.com/sets')
     .then(resp => {
         const deckKeys = ['code', 'name', 'released_at', 'deck_type:type', 'card_count', 'icon_svg_uri:iconUrl', 
-                        'scryfall_uri:url', 'set_type:type', 'digital:isDigital'];
+                        'scryfall_uri:url', 'set_type:type', 'digital:isDigital', 'card_count'];
         return resp['data']['data'].map((deck: any) => selectSpecificKeys(deck, deckKeys, true));
     })
     .catch((error) => {
@@ -49,9 +50,10 @@ async function getCard(cardId: string){
                     const cardFaceInfo = selectSpecificKeys(cardFace, cardFaceKeys, true);
 
                     const fullCardFaceInfo = Object.assign(cardInfo, cardFaceInfo);
-                    fullCardFaceInfo['cardPartNumber'] = idx;
 
-                    cardsInfo.push(fullCardFaceInfo);
+                    fullCardFaceInfo['cardPartNumber'] = idx + 1;
+
+                    cardsInfo.push({...fullCardFaceInfo});
                 });
             }
 
@@ -145,21 +147,52 @@ export async function scrapeAllCardIds(){
     });
 }
 
-export async function scrapeAllCards(){
+class WorkerWaitForFullBatch<T> {
+    array: T[];
+    batchSize: number;
+    functionToProcess: (arr: T[]) => any;
+   
+    constructor(functionToProcess: (arr: T[]) => any, batchSize: number = 1000) {
+        this.array = [];
+        this.batchSize = batchSize;
+        this.functionToProcess = functionToProcess;
+    }
+   
+    push(vals: T[]){
+        for(let i = 0; i < vals.length; i++){
+            this.array.push(vals[i]);
+
+            if(this.array.length >= this.batchSize){
+                this.doWork(this.array.splice(0, this.batchSize));
+            }
+        }
+    };
+
+    doWork(workArray: T[]){
+        this.functionToProcess(workArray);
+    }
+}
+
+export async function scrapeAllCards(insertCardsInTable?: (arr: any[]) => any, batchSize: number = 1000){
     return getDecks()
-    .then(decks => 
+    .then(decks =>
         decks.reduce((obj: {scryfall_uri: string, code: string}[], deck: any) => {
-            if(deck['card_count'] > 0) obj.push({scryfall_uri: deck['scryfall_uri'], code: deck['code']});
+            if(deck['cardCount'] > 0) obj.push({scryfall_uri: deck['url'], code: deck['code']});
 
             return obj;
         }, [])
     )
     .then(async (decks) => {
         // TODO: Use interface, and extend interface of returned obj
-        const decksObj: {[k: string]: {[k: string]: string[]}} = {};
+        //const decksObj: {[k: string]: {[k: string]: string[]}} = {};
 
         const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
         progressBar.start(decks.length, 0);
+
+        let worker: WorkerWaitForFullBatch<any>;
+        if(insertCardsInTable){
+            worker = new WorkerWaitForFullBatch(insertCardsInTable, batchSize);
+        }
 
         let cards: any[] = [];
 
@@ -170,14 +203,18 @@ export async function scrapeAllCards(){
             let cardsIdsArray: string[] = [];
             cardsIdsArray = cardsIdsArray.concat(...Object.values(cardIdsObj));
 
+            // TODO: make object that is activated when its inside has >= batch size
             await cardsIdsArray.forEach(async (id) => {
                 const returnedCard = await getCard(id);
                 cards = cards.concat(...returnedCard);
+
+                if(insertCardsInTable) worker.push(returnedCard);
             });
+
         }
         progressBar.stop();
 
-        return decksObj;
+        return cards;
     })
     .catch((error) => {
         //console.log(error);
@@ -185,12 +222,3 @@ export async function scrapeAllCards(){
         throw(error);
     });
 }
-
-/*scrapeAllCards()
-.catch((error) => {
-    console.log(error);
-    process.exit();
-});*/
-
-getDecks()
-.then(console.log);

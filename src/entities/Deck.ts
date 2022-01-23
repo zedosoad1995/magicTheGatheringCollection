@@ -7,12 +7,17 @@ import {
     OneToMany,
     PrimaryColumn,
     Unique,
+    PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Card } from './Card';
 
 @Entity('deck')
+@Unique("UQ_CODE", ["id", "code"])
 export class Deck extends BaseEntity {
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
     code: string;
 
     @Column()
