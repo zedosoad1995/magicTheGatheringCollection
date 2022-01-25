@@ -1,0 +1,25 @@
+>=2015 = 70%
+c = 1.15835
+total = 513,17
+
+prob = (c)**(year-1)/total
+
+11/16 commons
+3/16 uncommons
+7/128 rares
+1/128 mythics
+1/16 basic lands
+
+API: https://scryfall.com/docs/api/cards/multiverse
+https://scryfall.com/docs/api/sets/all
+
+Contem json cheio de info!!! exceto o preco: https://mtgjson.com/downloads/all-sets/
+
+
+precos: https://deckbox.org/games/mtg/cards?c=ctikepo&o=a&s=n&sc=1
+para images (sem censura), em cima escolher a edicao: https://deckbox.org/mtg/Crusade?printing=17616 
+
+XX probably irrelevant -- decks com datas: https://aetherhub.com/Card/Set
+
+Foil cards are randomly inserted in Draft booster packs. 
+From Core Set 2020 forwards, 1:45 cards in Draft Boosters is foil, instead of the previous 1:67.
