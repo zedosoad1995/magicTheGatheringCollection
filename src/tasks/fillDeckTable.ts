@@ -11,7 +11,7 @@ export async function insertAllDecksInTable(){
         .insert()
         .into(Deck)
         .values(decks)
-        .orUpdate(['name', 'releasedAt', 'cardCount', 'isDigital', 'iconUrl', 'type', 'url'], 'UQ_CODE')
+        .orUpdate(['name', 'releasedAt', 'cardCount', 'isDigital', 'iconUrl', 'type', 'url'], 'UQ_0afab7e745df7e2b60fc321c4e2')
         .execute();
     })
 }

@@ -30,9 +30,9 @@ export class Price extends BaseEntity {
     @Column({nullable: true, type: "float"})
     tix: number;
 
-	@CreateDateColumn()
+	@CreateDateColumn({ type: 'timestamptz' })
 	created_at: Date;
 
-	@UpdateDateColumn()
+	@UpdateDateColumn({ type: 'timestamptz' })
 	updated_at: Date;
 }

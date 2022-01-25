@@ -33,7 +33,7 @@ async function getCard(cardId: string){
                     'reserved:isReserved', 'foil:hasFoil', 'nonfoil:hasNonFoil', 'oversized:isOversized', 'promo:isPromo', 'reprint:isReprint', 
                     'variation:isVariation', 'set', 'collector_number', 'digital:isDigital', 'rarity', 'flavor_text:descriptionText', 'border_color', 
                     'frame', 'security_stamp', 'full_art:isFullArt', 'textless:isTextless','booster:fromBooster', 'story_spotlight:hasStorySpotlight',
-                    'prices', 'edhrec_rank', 'loyalty'];
+                    'prices', 'edhrec_rank', 'loyalty', 'keywords', 'frame_effects'];
 
     const cardFaceKeys = [ 'name', 'mana_cost', 'type_line:type', 'oracle_text:rulesText', 'colors', 'power', 'toughness', 'artist',
                         'image_uris png>large>normal>small:imageUrl', 'loyalty', 'flavor_text:descriptionText', 'layout', 'cmc:rawCost'];
@@ -171,6 +171,12 @@ class WorkerWaitForFullBatch<T> {
     doWork(workArray: T[]){
         this.functionToProcess(workArray);
     }
+
+    finishWork(){
+        this.functionToProcess(this.array);
+        this.array.length = 0
+
+    }
 }
 
 export async function scrapeAllCards(insertCardsInTable?: (arr: any[]) => any, batchSize: number = 1000){
@@ -189,7 +195,7 @@ export async function scrapeAllCards(insertCardsInTable?: (arr: any[]) => any, b
         const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
         progressBar.start(decks.length, 0);
 
-        let worker: WorkerWaitForFullBatch<any>;
+        let worker: WorkerWaitForFullBatch<any> = new WorkerWaitForFullBatch(()=>{}, 0);
         if(insertCardsInTable){
             worker = new WorkerWaitForFullBatch(insertCardsInTable, batchSize);
         }
@@ -210,8 +216,8 @@ export async function scrapeAllCards(insertCardsInTable?: (arr: any[]) => any, b
 
                 if(insertCardsInTable) worker.push(returnedCard);
             });
-
         }
+        if(insertCardsInTable) worker.finishWork();
         progressBar.stop();
 
         return cards;

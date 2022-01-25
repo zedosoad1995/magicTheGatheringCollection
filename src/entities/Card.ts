@@ -44,7 +44,7 @@ export class Card extends BaseEntity {
     @Column({nullable: true})
     manaCost: string;
 
-    @Column()
+    @Column({nullable: true, type: "float"})
     rawCost: number;
 
     @Column({nullable: true})
@@ -141,9 +141,9 @@ export class Card extends BaseEntity {
     )
     deck: Deck;
 
-	@CreateDateColumn()
+	@CreateDateColumn({ type: 'timestamptz' })
 	created_at: Date;
 
-	@UpdateDateColumn()
+	@UpdateDateColumn({ type: 'timestamptz' })
 	updated_at: Date;
 }

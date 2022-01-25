@@ -31,7 +31,7 @@ async function main(){
         });
         console.log('Successfully connected to DB.')
 
-        //insertAllDecksInTable();
+        await insertAllDecksInTable();
         
         scrapeAllCards(insertCardsInTable);
     }catch(error){
