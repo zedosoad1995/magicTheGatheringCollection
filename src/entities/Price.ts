@@ -5,7 +5,10 @@ import {
     BaseEntity,
 	CreateDateColumn,
 	UpdateDateColumn,
+    JoinColumn,
+    OneToOne,
 } from 'typeorm';
+import { Card } from './Card';
 
 @Entity('price')
 export class Price extends BaseEntity {
@@ -29,6 +32,10 @@ export class Price extends BaseEntity {
 
     @Column({nullable: true, type: "float"})
     tix: number;
+
+    @OneToOne(() => Card, {nullable: false, cascade: true, eager: true})
+    @JoinColumn()
+    card: Card;
 
 	@CreateDateColumn({ type: 'timestamptz' })
 	created_at: Date;

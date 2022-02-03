@@ -10,7 +10,6 @@ import {
     ManyToOne,
     Unique,
 } from 'typeorm';
-import { Price } from './Price';
 import { Deck } from './Deck';
 
 // TODO: inserir nullable e default value
@@ -130,10 +129,6 @@ export class Card extends BaseEntity {
 
     @Column({nullable: true})
     cardPartNumber: number;
-
-    @OneToOne(() => Price, {nullable: true, cascade: true, eager: true})
-    @JoinColumn()
-    price: Price;
     
     @ManyToOne(
         () => Deck, 

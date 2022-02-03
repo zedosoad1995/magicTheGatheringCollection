@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import {createConnection} from 'typeorm'
 import express from 'express'
 import bodyParser from 'body-parser'
@@ -8,6 +7,7 @@ import { Card } from './entities/Card';
 import { insertAllDecksInTable } from './tasks/fillDeckTable';
 import { scrapeAllCards } from './utils/dataExtraction';
 import { insertCardsInTable } from './tasks/fillCardTable';
+import connectionOptions from '../ormconfig';
 
 const app = express();
 
@@ -20,20 +20,12 @@ async function main(){
 
     //await app.listen(process.env.PORT || 3000, () => console.log(`App listening on port ${process.env.PORT || 3000}...`));
     try{
-        const connection = await createConnection({
-            type: 'postgres',
-            host: process.env.DB_HOST,
-            username: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_DATABASE,
-            entities: [Deck, Card, Price],
-            synchronize: true
-        });
+        const connection = await createConnection(connectionOptions);
         console.log('Successfully connected to DB.')
 
-        await insertAllDecksInTable();
+        //await insertAllDecksInTable();
         
-        scrapeAllCards(insertCardsInTable);
+        //scrapeAllCards(insertCardsInTable);
     }catch(error){
         console.log(error);
     }
