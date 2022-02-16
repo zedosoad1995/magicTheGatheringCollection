@@ -7,6 +7,7 @@ import {
 	UpdateDateColumn,
     JoinColumn,
     OneToOne,
+    OneToMany,
 } from 'typeorm';
 import { Card } from './Card';
 
@@ -33,9 +34,11 @@ export class Price extends BaseEntity {
     @Column({nullable: true, type: "float"})
     tix: number;
 
-    @OneToOne(() => Card, {nullable: false, cascade: true, eager: true})
-    @JoinColumn()
-    card: Card;
+    @OneToMany(
+        () => Card,
+        (cards) => cards.deck
+    )
+    cards: Card[];
 
 	@CreateDateColumn({ type: 'timestamptz' })
 	created_at: Date;

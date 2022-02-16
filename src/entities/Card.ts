@@ -11,6 +11,7 @@ import {
     Unique,
 } from 'typeorm';
 import { Deck } from './Deck';
+import { Price } from './Price';
 
 // TODO: inserir nullable e default value
 @Entity('card')
@@ -135,6 +136,13 @@ export class Card extends BaseEntity {
         deck => deck.cards
     )
     deck: Deck;
+
+    @ManyToOne(
+        () => Price, 
+        price => price.cards,
+        {nullable: false, cascade: true, eager: true}
+    )
+    price: Price;
 
 	@CreateDateColumn({ type: 'timestamptz' })
 	created_at: Date;

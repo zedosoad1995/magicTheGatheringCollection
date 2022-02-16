@@ -13,9 +13,9 @@ const connectionOptions: ConnectionOptions = {
     entities: [Deck, Card, Price],
     port: Number(process.env.DB_PORT),
     synchronize: false,
-    migrations: [`migration/*.ts`],
+    migrations: [`src/migration/*.ts`],
     cli: {
-        migrationsDir: "migration"
+        migrationsDir: "src/migration"
     }
 }
 

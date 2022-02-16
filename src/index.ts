@@ -23,9 +23,10 @@ async function main(){
         const connection = await createConnection(connectionOptions);
         console.log('Successfully connected to DB.')
 
-        //await insertAllDecksInTable();
+        await insertAllDecksInTable();
+        console.log('decks updated');
         
-        //scrapeAllCards(insertCardsInTable);
+        scrapeAllCards(insertCardsInTable);
     }catch(error){
         console.log(error);
     }
