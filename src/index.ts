@@ -19,17 +19,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 async function main(){
 
     //await app.listen(process.env.PORT || 3000, () => console.log(`App listening on port ${process.env.PORT || 3000}...`));
-    try{
-        const connection = await createConnection(connectionOptions);
-        console.log('Successfully connected to DB.')
+    const connection = await createConnection(connectionOptions);
+    console.log('Successfully connected to DB.');
 
-        await insertAllDecksInTable();
-        console.log('decks updated');
-        
-        scrapeAllCards(insertCardsInTable);
-    }catch(error){
-        console.log(error);
-    }
+    await insertAllDecksInTable();
+    console.log('decks updated');
+
+    
+    await scrapeAllCards(insertCardsInTable);
 }
 
-main();
+main().catch(err => {
+    console.error(err);
+});

@@ -4,6 +4,7 @@ import cliProgress from 'cli-progress';
 import {selectSpecificKeys} from './utils';
 import axiosRetry from 'axios-retry';
 import { insertCardsInTable } from '../tasks/fillCardTable';
+import { ScrapingLogger } from '../logger';
 
 axiosRetry(axios, {
     retries: 3,
@@ -151,11 +152,15 @@ class WorkerWaitForFullBatch<T> {
     array: T[];
     batchSize: number;
     functionToProcess: (arr: T[]) => any;
+    #numWorkers: number = 0;
+    #lastWorkerCalled: boolean = false;
    
     constructor(functionToProcess: (arr: T[]) => any, batchSize: number = 1000) {
         this.array = [];
         this.batchSize = batchSize;
         this.functionToProcess = functionToProcess;
+        this.#numWorkers = 0;
+        this.#lastWorkerCalled = false;
     }
    
     push(vals: T[]){
@@ -163,23 +168,39 @@ class WorkerWaitForFullBatch<T> {
             this.array.push(vals[i]);
 
             if(this.array.length >= this.batchSize){
+                
                 this.doWork(this.array.splice(0, this.batchSize));
             }
         }
     };
 
-    doWork(workArray: T[]){
-        this.functionToProcess(workArray);
+    async doWork(workArray: T[]){
+        this.#numWorkers++;
+        await this.functionToProcess(workArray);
+        this.#numWorkers--;
+        this.#checkEndingLog();
     }
 
-    finishWork(){
-        this.functionToProcess(this.array);
+    async finishWork(){
+        this.#numWorkers++;
+        this.#lastWorkerCalled = true;
+        await this.functionToProcess(this.array);
         this.array.length = 0
+        this.#numWorkers--;
+        this.#checkEndingLog();
+    }
 
+    #checkEndingLog(){
+        console.log(this.#numWorkers);
+        if(this.#lastWorkerCalled && this.#numWorkers === 0){
+            ScrapingLogger.end();
+        }
     }
 }
 
 export async function scrapeAllCards(insertCardsInTable?: (arr: any[]) => any, batchSize: number = 1000){
+    ScrapingLogger.begin();
+
     return getDecks()
     .then(decks =>
         decks.reduce((obj: {scryfall_uri: string, code: string}[], deck: any) => {
@@ -203,19 +224,19 @@ export async function scrapeAllCards(insertCardsInTable?: (arr: any[]) => any, b
         let cards: any[] = [];
 
         for(let i = 0; i < decks.length; i++){
-            progressBar.update(i);
+            progressBar.update(i+1);
             const cardIdsObj = await scrapeCardIdsFromDeck(decks[i]['scryfall_uri']);
 
             let cardsIdsArray: string[] = [];
             cardsIdsArray = cardsIdsArray.concat(...Object.values(cardIdsObj));
 
             // TODO: make object that is activated when its inside has >= batch size
-            await cardsIdsArray.forEach(async (id) => {
+            await Promise.all(cardsIdsArray.map(async (id) => {
                 const returnedCard = await getCard(id);
                 cards = cards.concat(...returnedCard);
 
                 if(insertCardsInTable) worker.push(returnedCard);
-            });
+            }));
         }
         if(insertCardsInTable) worker.finishWork();
         progressBar.stop();
@@ -223,8 +244,9 @@ export async function scrapeAllCards(insertCardsInTable?: (arr: any[]) => any, b
         return cards;
     })
     .catch((error) => {
-        //console.log(error);
-        //process.exit();
+        console.log('err');
+        ScrapingLogger.error(`Error scraping cards.\n${error}`);
+        ScrapingLogger.end();
         throw(error);
     });
 }

@@ -1,8 +1,8 @@
-import { getDecks, scrapeAllCards } from "../utils/dataExtraction";
 import { getConnection } from "typeorm";
 import { Deck } from "../entities/Deck";
 import { Card } from "../entities/Card";
 import { Price } from "../entities/Price";
+import { ScrapingLogger } from '../logger';
 
 import _ from 'lodash';
 
@@ -27,7 +27,6 @@ function getNewPriceEntity(card: any){
 // TODO: put constraint value in file
 export async function insertCardsInTable(cards: any){
     for(const card of cards){
-
         const cardPart = ('cardPartNumber' in card) ? card['cardPartNumber'] : null;
 
         const existingCards = await getConnection().manager
@@ -36,10 +35,10 @@ export async function insertCardsInTable(cards: any){
         const otherCardParts = existingCards.filter(card => card.cardPartNumber !== cardPart);
         const currCardParts = existingCards.filter(card => card.cardPartNumber === cardPart);
 
-        const doesCardExist = currCardParts.length > 0;
+        const cardExists = currCardParts.length > 0;
         const containsOtherParts = otherCardParts.length > 0;
 
-        if(!doesCardExist){
+        if(!cardExists){
             const cardEntity = Card.create(_.omit(card, 'prices'));
 
             cardEntity['price'] = containsOtherParts ? otherCardParts[0]['price'] : getNewPriceEntity(card);
@@ -53,7 +52,9 @@ export async function insertCardsInTable(cards: any){
             };
             cardEntity['deck'] = foundDeck;
 
-            await getConnection().manager.save(cardEntity);
+            const savedCard = await getConnection().manager.save(cardEntity);
+
+            ScrapingLogger.addNewCard(savedCard['id']);
 
         }else{
             const cardEntity = currCardParts[0];
@@ -63,5 +64,7 @@ export async function insertCardsInTable(cards: any){
 
             await getConnection().manager.save(cardEntity);
         }
+
+        ScrapingLogger.incrementCardCounter();
     }
 }
