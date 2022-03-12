@@ -30,25 +30,26 @@ export async function insertCardsInTable(cards: any){
         const cardPart = ('cardPartNumber' in card) ? card['cardPartNumber'] : null;
 
         const existingCards = await getConnection().manager
-        .find(Card, {where: {uniqueScryfallId: card['uniqueScryfallId']}});
+            .find(Card, {where: {uniqueScryfallId: card['uniqueScryfallId']}});
 
-        const otherCardParts = existingCards.filter(card => card.cardPartNumber !== cardPart);
         const currCardParts = existingCards.filter(card => card.cardPartNumber === cardPart);
+        const otherCardParts = existingCards.filter(card => card.cardPartNumber !== cardPart);
 
-        const cardExists = currCardParts.length > 0;
+        const cardExistsInDB = currCardParts.length > 0;
         const containsOtherParts = otherCardParts.length > 0;
 
-        if(!cardExists){
+        if(!cardExistsInDB){
             const cardEntity = Card.create(_.omit(card, 'prices'));
 
+            // Price from other parts must be the same in all parts
             cardEntity['price'] = containsOtherParts ? otherCardParts[0]['price'] : getNewPriceEntity(card);
 
             const foundDeck = await getConnection().manager
-            .find(Deck, {where: {code: card['set']}})
-            .then(decks => decks[0]);
+                .find(Deck, {where: {code: card['set']}})
+                .then(decks => decks[0]);
 
             if(!foundDeck){
-                throw new Error(`Card set '${card['set']}' not found`);
+                throw new Error(`Deck '${card['set']}' not found`);
             };
             cardEntity['deck'] = foundDeck;
 

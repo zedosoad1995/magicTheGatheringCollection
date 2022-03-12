@@ -25,8 +25,8 @@ async function main(){
     await insertAllDecksInTable();
     console.log('decks updated');
 
-    
     await scrapeAllCards(insertCardsInTable);
+    console.log('cards updated');
 }
 
 main().catch(err => {
