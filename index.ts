@@ -7,7 +7,7 @@ import { Card } from './entities/Card';
 import { insertAllDecksInTable } from './tasks/fillDeckTable';
 import { scrapeAllCards } from './utils/dataExtraction';
 import { insertCardsInTable } from './tasks/fillCardTable';
-import connectionOptions from '../ormconfig';
+import connectionOptions from './ormconfig';
 
 const app = express();
 

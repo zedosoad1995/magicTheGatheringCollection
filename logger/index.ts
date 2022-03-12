@@ -17,13 +17,13 @@ export class ScrapingLogger {
             logFormat2
           ),
         transports: [
-            new transports.File({ filename: 'src/logger/loggingData/scraping.log' }),
+            new transports.File({ filename: './logger/loggingData/scraping.log' }),
         ],
     });;
     static #newCardsLogger: Logger = createLogger({
         format: logFormatCardId,
         transports: [
-            new transports.File({ filename: 'src/logger/loggingData/newCards/newCards.log' }),
+            new transports.File({ filename: './logger/loggingData/newCards/newCards.log' }),
         ],
     });;
     static #startTime: number = 0;
@@ -31,7 +31,7 @@ export class ScrapingLogger {
     static #numCards: number = 0;
     static #numNewCards: number = 0;
 
-    construnctor(){
+    constructor(){
     }
 
     static info(str: string){

@@ -1,8 +1,8 @@
 import 'dotenv/config'
 import { ConnectionOptions } from 'typeorm';
-import { Card } from './src/entities/Card';
-import { Deck } from './src/entities/Deck';
-import { Price } from './src/entities/Price';
+import { Card } from './entities/Card';
+import { Deck } from './entities/Deck';
+import { Price } from './entities/Price';
 
 const connectionOptions: ConnectionOptions = {
     type: 'postgres',
@@ -13,9 +13,9 @@ const connectionOptions: ConnectionOptions = {
     entities: [Deck, Card, Price],
     port: Number(process.env.DB_PORT),
     synchronize: false,
-    migrations: [`src/migration/*.ts`],
+    migrations: [`./migration/*.ts`],
     cli: {
-        migrationsDir: "src/migration"
+        migrationsDir: "./migration"
     }
 }
 
