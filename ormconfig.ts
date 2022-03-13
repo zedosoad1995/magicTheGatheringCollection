@@ -4,6 +4,21 @@ import { Card } from './entities/Card';
 import { Deck } from './entities/Deck';
 import { Price } from './entities/Price';
 
+/*const connectionOptions: ConnectionOptions = {
+    type: 'postgres',
+    host: 'localhost',
+    username: 'postgres',
+    password: 'Platipus1_',
+    database: 'magicTheGathering',
+    entities: [Deck, Card, Price],
+    port: 5432,
+    synchronize: false,
+    migrations: [`./migration/*.ts`],
+    cli: {
+        migrationsDir: "./migration"
+    }
+}*/
+
 const connectionOptions: ConnectionOptions = {
     type: 'postgres',
     host: process.env.DB_HOST,
@@ -13,10 +28,6 @@ const connectionOptions: ConnectionOptions = {
     entities: [Deck, Card, Price],
     port: Number(process.env.DB_PORT),
     synchronize: false,
-    migrations: [`./migration/*.ts`],
-    cli: {
-        migrationsDir: "./migration"
-    }
 }
 
-export = connectionOptions;
+export default connectionOptions;

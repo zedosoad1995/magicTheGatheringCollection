@@ -8,6 +8,7 @@ import { insertAllDecksInTable } from './tasks/fillDeckTable';
 import { scrapeAllCards } from './utils/dataExtraction';
 import { insertCardsInTable } from './tasks/fillCardTable';
 import connectionOptions from './ormconfig';
+import { getRandomCard } from './tasks/getCards';
 
 const app = express();
 
@@ -22,11 +23,13 @@ async function main(){
     const connection = await createConnection(connectionOptions);
     console.log('Successfully connected to DB.');
 
-    await insertAllDecksInTable();
-    console.log('decks updated');
+    //getRandomCard();
 
-    await scrapeAllCards(insertCardsInTable);
-    console.log('cards updated');
+    //await insertAllDecksInTable();
+    //console.log('decks updated');
+
+    //await scrapeAllCards(insertCardsInTable);
+    //console.log('cards updated');
 }
 
 main().catch(err => {
