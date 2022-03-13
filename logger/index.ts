@@ -1,7 +1,7 @@
 import {createLogger, format, transports, Logger} from 'winston';
 const { combine, timestamp, printf } = format;
 
-const logFormat2 = printf(({ level, message, timestamp }) => {
+const logFormat = printf(({ level, message, timestamp }) => {
     return `[${timestamp}] ${level}: ${message}`;
 });
 
@@ -14,7 +14,7 @@ export class ScrapingLogger {
     static #logger: Logger = createLogger({
         format: combine(
             timestamp(),
-            logFormat2
+            logFormat
           ),
         transports: [
             new transports.File({ filename: './logger/loggingData/scraping.log' }),
@@ -45,7 +45,6 @@ export class ScrapingLogger {
     static begin(){
         this.#startTime = Date.now();
         this.#logger.info('Start scraping all cards.');
-        console.log('start')
     }
 
     static incrementCardCounter(){
@@ -60,7 +59,7 @@ export class ScrapingLogger {
     static end(){
         this.#endTime = Date.now();
         this.#logger.info(`Scraping finished. Duration: ${this.#endTime - this.#startTime} ms`);
-        this.#logger.info(`Total Cards Scraped: ${this.#numCards}, New Cards Added: ${this.#numNewCards} to filepath: 'src/logger/loggingData/newCards/newCards.log'`);
+        this.#logger.info(`Total Cards Scraped: ${this.#numCards}, New Cards Added: ${this.#numNewCards} to filepath: './logger/loggingData/newCards/newCards.log'`);
     }
 
     static get getNumCardsScraped(){

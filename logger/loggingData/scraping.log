@@ -4,3 +4,5 @@
 [2022-03-12T17:26:43.865Z] info: Scraping finished. Duration: 594115 ms
 [2022-03-12T17:26:43.865Z] info: Total Cards Scraped: 69160, New Cards Added: 29160 to filepath: 'src/logger/loggingData/newCards/newCards.log'
 [2022-03-12T21:10:12.913Z] info: Start scraping all cards.
+[2022-03-13T12:10:54.736Z] info: Start scraping all cards.
+[2022-03-13T12:13:26.963Z] info: Start scraping all cards.
